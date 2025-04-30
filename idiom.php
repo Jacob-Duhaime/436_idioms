@@ -1,5 +1,6 @@
 <?php
 require 'includes/database-connection.php';
+session_start(); 
 
 $idiom_id = $_GET['id'];
 
@@ -9,6 +10,7 @@ function get_idiom_by_id(PDO $pdo, string $id) {
         SELECT 
             i.IdiomID,
             i.Text AS Idiom,
+            i.ContID,
             m.Text AS Meaning,
             o.Text AS Origin
         FROM Idiom i
@@ -17,9 +19,18 @@ function get_idiom_by_id(PDO $pdo, string $id) {
         WHERE i.IdiomID = :id;
     ";
     $idiom = pdo($pdo, $sql, ['id' => $id])->fetch();
-
     if (!$idiom) return null;
 
+    // get contributor
+    $contributor_sql = "
+        SELECT 
+            u.Username
+        FROM User u
+        LEFT JOIN Contribution c ON u.UserID = c.UserID
+        WHERE c.ContID = :id;
+    ";
+    $contributor = pdo($pdo, $contributor_sql, ['id' => $idiom['ContID']])->fetch();
+    $idiom['Contributors'] = $contributor;
     // Get examples
     $example_sql = "SELECT Text FROM Example WHERE IdiomID = :id;";
     $examples = pdo($pdo, $example_sql, ['id' => $id])->fetchAll(PDO::FETCH_COLUMN);
@@ -37,11 +48,6 @@ function get_idiom_by_id(PDO $pdo, string $id) {
     $translations = pdo($pdo, $translation_sql, ['id' => $id])->fetchAll(PDO::FETCH_ASSOC);
     $idiom['Translations'] = $translations;
 
-    // Get contributors using multiple joins
-    $contributor_sql = "SELECT User.Username FROM User WHERE UserID = :id;";
-    $contributors = pdo($pdo, $contributor_sql, ['id' => $id])->fetchAll();
-    $idiom['Contributors'] = $contributors;
-
     return $idiom;
 }
 
@@ -55,26 +61,6 @@ if (!$idiom) {
     die("Idiom not found.");
 }
 
-// Placeholder idiom content
-// $idiom = [
-//     'idiom' => 'Break the ice',
-//     'origin' => 'Derived from ships breaking the ice in frozen waters to allow passage.'
-// ];
-
-// $meanings = [
-//     'To start a conversation in a social setting.',
-//     'To ease tension in a new or awkward situation.'
-// ];
-
-// $examples = [
-//     'She told a funny joke to break the ice at the party.',
-//     'Games helped break the ice at orientation.'
-// ];
-
-// $translations = [
-//     ['translation' => '打破冷场', 'language' => 'Mandarin Chinese'],
-//     ['translation' => 'rompre la glace', 'language' => 'French']
-// ];
 ?>
 
 <!DOCTYPE html>
@@ -83,6 +69,7 @@ if (!$idiom) {
     <meta charset="UTF-8">
     <title><?= htmlspecialchars($idiom['Text']) ?> - Idiom Dictionary</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/main.js" defer></script>
 </head>
 <body>
     <header>
@@ -114,10 +101,10 @@ if (!$idiom) {
         <div class="idiom-card">
             <h2><?= $idiom['Idiom'] ?></h2>
             <div class="vote-section">
-                <button type="button" disabled>👍 Upvote</button>
-                <span><?= $idiom['votes_up'] ?? 0 ?></span>
-                <button type="button" disabled>👎 Downvote</button>
-                <span><?= $idiom['votes_down'] ?? 0 ?></span>
+            <button type="button" class="upvote-btn" data-idiom-id="<?= $idiom['IdiomID'] ?>">👍 Upvote</button>
+            <span class="upvote-count" data-idiom-id="<?= $idiom['IdiomID'] ?>">3</span>
+            <button type="button" class="downvote-btn" data-idiom-id="<?= $idiom['IdiomID'] ?>">👎 Downvote</button>
+            <span class="downvote-count" data-idiom-id="<?= $idiom['IdiomID'] ?>">5</span>
             </div>
 
             <div class="idiom-section">
@@ -144,6 +131,18 @@ if (!$idiom) {
                     <div class="idiom-block"><?= htmlspecialchars($t['Text']) ?> <small>(<?= htmlspecialchars($t['Language']) ?>)</small></div>
                 <?php endforeach; ?>
             </div>
+            
+            <div class="idiom-section">
+                <h3>Contributor</h3>
+                <div class="idiom-block">
+                    <?php if (!empty($idiom['Contributors'])): ?>
+                        <?= htmlspecialchars(implode(', ', $idiom['Contributors'])); ?>
+                    <?php else: ?>
+                        Anon.
+                    <?php endif; ?>
+                </div>
+            </div>
+
         </div>
     </main>
 

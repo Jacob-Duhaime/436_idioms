@@ -32,6 +32,7 @@ $idioms = get_random_idioms($pdo);
     <meta charset="UTF-8">
     <title>Search Idioms</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/main.js" defer></script>
 </head>
 <body>
     <header>

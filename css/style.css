@@ -104,9 +104,9 @@ main {
     color: #333;
 }
 
-.snackbar h3 {
+.snackbar warn {
     margin: 0 0 10px;
-    color: #333;
+    color: #FF0000;
 }
 /* Footer */
 footer {

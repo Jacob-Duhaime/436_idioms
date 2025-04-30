@@ -24,11 +24,6 @@ function get_random_idioms(PDO $pdo) {
 }
 
 $idioms = get_random_idioms($pdo);
-// $idioms = [
-//     ['id' => 1, 'idiom' => 'Break the ice', 'meaning' => 'To start a conversation in a social setting.'],
-//     ['id' => 2, 'idiom' => 'Spill the beans', 'meaning' => 'To reveal a secret.'],
-//     ['id' => 3, 'idiom' => 'Hit the sack', 'meaning' => 'To go to bed.']
-// ];
 ?>
 
 <!DOCTYPE html>

@@ -47,5 +47,3 @@ function pdo(PDO $pdo, string $sql, array $arguments = null)
         $statement->execute($arguments);  // Bind & execute SQL statement w/provided arguments
         return $statement;               // Return PDOStatement object
     }
-                                          
-// Closing PHP tag  ?>                                             

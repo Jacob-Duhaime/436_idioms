@@ -31,6 +31,19 @@ function get_idiom_by_id(PDO $pdo, string $id) {
     ";
     $contributor = pdo($pdo, $contributor_sql, ['id' => $idiom['ContID']])->fetch();
     $idiom['Contributors'] = $contributor;
+
+    // Get vote counts
+    $votes_up_stmt = $pdo->prepare("SELECT COUNT(*) FROM Rating WHERE IdiomID = :idiomID AND VoteType = 1");
+    $votes_up_stmt->execute(['idiomID' => $id]);
+    $votes_up = $votes_up_stmt->fetchColumn();
+    
+    $votes_down_stmt = $pdo->prepare("SELECT COUNT(*) FROM Rating WHERE IdiomID = :idiomID AND VoteType = 0");
+    $votes_down_stmt->execute(['idiomID' => $id]);
+    $votes_down = $votes_down_stmt->fetchColumn();
+    
+    $idiom['VotesUp'] = $votes_up;
+    $idiom['VotesDown'] = $votes_down;
+
     // Get examples
     $example_sql = "SELECT Text FROM Example WHERE IdiomID = :id;";
     $examples = pdo($pdo, $example_sql, ['id' => $id])->fetchAll(PDO::FETCH_COLUMN);
@@ -67,7 +80,7 @@ if (!$idiom) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title><?= htmlspecialchars($idiom['Text']) ?> - Idiom Dictionary</title>
+    <title><?= htmlspecialchars($idiom['Idiom']) ?> - Idiom Index</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="js/main.js" defer></script>
 </head>
@@ -100,11 +113,13 @@ if (!$idiom) {
     <main>
         <div class="idiom-card">
             <h2><?= $idiom['Idiom'] ?></h2>
+
             <div class="vote-section">
-            <button type="button" class="upvote-btn" data-idiom-id="<?= $idiom['IdiomID'] ?>">👍 Upvote</button>
-            <span class="upvote-count" data-idiom-id="<?= $idiom['IdiomID'] ?>">3</span>
-            <button type="button" class="downvote-btn" data-idiom-id="<?= $idiom['IdiomID'] ?>">👎 Downvote</button>
-            <span class="downvote-count" data-idiom-id="<?= $idiom['IdiomID'] ?>">5</span>
+                <button class="upvote-btn" data-idiom-id="<?= $idiom['IdiomID'] ?>">👍</button>
+                <span class="upvote-count" data-idiom-id="<?= $idiom['IdiomID'] ?>"><?= $idiom['VotesUp']?></span>
+
+                <button class="downvote-btn" data-idiom-id="<?= $idiom['IdiomID'] ?>">👎</button>
+                <span class="downvote-count" data-idiom-id="<?= $idiom['IdiomID'] ?>"><?= $idiom['VotesDown']?></span>
             </div>
 
             <div class="idiom-section">

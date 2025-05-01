@@ -74,40 +74,29 @@ document.getElementById("profileMenu").addEventListener("click", function(event)
     event.stopPropagation(); // Prevent the click event from bubbling up to document
 });
 
-// Track clicked idiom IDs for upvotes and downvotes
-const upvoteClicked = new Set();
-const downvoteClicked = new Set();
+document.querySelectorAll('.upvote-btn, .downvote-btn').forEach(button => {
+    button.addEventListener('click', async () => {
+        const idiomID = button.dataset.idiomId;
+        const voteType = button.classList.contains('upvote-btn') ? 1 : 0;
 
-// Upvote button logic
-document.querySelectorAll(".upvote-btn").forEach(button => {
-    button.addEventListener("click", () => {
-        const idiomId = button.dataset.idiomId;
-        if (!upvoteClicked.has(idiomId)) {
-            const countSpan = document.querySelector(`.upvote-count[data-idiom-id="${idiomId}"]`);
-            countSpan.textContent = parseInt(countSpan.textContent, 10) + 1;
-            upvoteClicked.add(idiomId);
-            
-            // Disable both buttons after click
-            button.disabled = true; // Disable the upvote button
-            const downvoteButton = document.querySelector(`.downvote-btn[data-idiom-id="${idiomId}"]`);
-            downvoteButton.disabled = true; // Disable the downvote button
-        }
-    });
-});
+        const response = await fetch('vote.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ idiomID, voteType })
+        });
 
-// Downvote button logic
-document.querySelectorAll(".downvote-btn").forEach(button => {
-    button.addEventListener("click", () => {
-        const idiomId = button.dataset.idiomId;
-        if (!downvoteClicked.has(idiomId)) {
-            const countSpan = document.querySelector(`.downvote-count[data-idiom-id="${idiomId}"]`);
-            countSpan.textContent = parseInt(countSpan.textContent, 10) + 1;
-            downvoteClicked.add(idiomId);
-            
-            // Disable both buttons after click
-            button.disabled = true; // Disable the downvote button
-            const upvoteButton = document.querySelector(`.upvote-btn[data-idiom-id="${idiomId}"]`);
-            upvoteButton.disabled = true; // Disable the upvote button
+        const result = await response.json();
+        if (result.failure) {
+            alert(result.error || 'Voting failed');
         }
+        // if (result.success) {
+            document.querySelector(`.upvote-count[data-idiom-id="${idiomID}"]`).textContent = result.votes_up;
+            document.querySelector(`.downvote-count[data-idiom-id="${idiomID}"]`).textContent = result.votes_down;
+
+        // } else {
+        //     alert(result.error || 'Voting failed');
+        // }
     });
 });

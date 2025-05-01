@@ -3,27 +3,6 @@
 require 'includes/database-connection.php';
 session_start(); 
 
-function get_random_idioms(PDO $pdo) {
-    $sql = "
-        SELECT 
-            i.IdiomID AS id,
-            i.Text AS Idiom,
-            (
-                SELECT m.Text 
-                FROM Meaning m 
-                WHERE m.IdiomID = i.IdiomID 
-                LIMIT 1
-            ) AS Meaning
-        FROM Idiom i
-        ORDER BY RAND()
-        LIMIT 5;
-    ";
-
-    $idioms = pdo($pdo, $sql)->fetchAll(PDO::FETCH_ASSOC);
-    return $idioms;
-}
-
-$idioms = get_random_idioms($pdo);
 ?>
 
 <!DOCTYPE html>
@@ -77,25 +56,25 @@ $idioms = get_random_idioms($pdo);
             $query = trim($_GET['query']);
 
             $sql = "
-SELECT DISTINCT
-    i.IdiomID,
-    i.Text AS Idiom,
-    (SELECT m.Text FROM Meaning m WHERE m.IdiomID = i.IdiomID LIMIT 1) AS Meaning,
-    (SELECT e.Text FROM Example e WHERE e.IdiomID = i.IdiomID LIMIT 1) AS Example,
-    CASE 
-        WHEN t.Text LIKE :q1 THEN t.Text
-        ELSE NULL
-    END AS Translation
-FROM Idiom i
-LEFT JOIN Translation t ON i.IdiomID = t.IdiomID 
-WHERE i.Text LIKE :q2 OR t.Text LIKE :q3;
-";
+                SELECT DISTINCT
+                    i.IdiomID,
+                    i.Text AS Idiom,
+                    (SELECT m.Text FROM Meaning m WHERE m.IdiomID = i.IdiomID LIMIT 1) AS Meaning,
+                    (SELECT e.Text FROM Example e WHERE e.IdiomID = i.IdiomID LIMIT 1) AS Example,
+                    CASE 
+                        WHEN t.Text LIKE :q1 THEN t.Text
+                        ELSE NULL
+                    END AS Translation
+                FROM Idiom i
+                LEFT JOIN Translation t ON i.IdiomID = t.IdiomID 
+                WHERE i.Text LIKE :q2 OR t.Text LIKE :q3;
+                ";
 
-$results = pdo($pdo, $sql, [
-    'q1' => '%' . $query . '%',
-    'q2' => '%' . $query . '%',
-    'q3' => '%' . $query . '%'
-])->fetchAll();
+            $results = pdo($pdo, $sql, [
+                'q1' => '%' . $query . '%',
+                'q2' => '%' . $query . '%',
+                'q3' => '%' . $query . '%'
+            ])->fetchAll();
 
             echo "<h3>Search Results for '<em>" . htmlspecialchars($query) . "</em>':</h3>";
 

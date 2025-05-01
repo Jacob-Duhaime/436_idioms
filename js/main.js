@@ -88,15 +88,12 @@ document.querySelectorAll('.upvote-btn, .downvote-btn').forEach(button => {
         });
 
         const result = await response.json();
-        if (result.failure) {
+        if (result.error) {
             alert(result.error || 'Voting failed');
         }
-        // if (result.success) {
+        if (result.success) {
             document.querySelector(`.upvote-count[data-idiom-id="${idiomID}"]`).textContent = result.votes_up;
             document.querySelector(`.downvote-count[data-idiom-id="${idiomID}"]`).textContent = result.votes_down;
-
-        // } else {
-        //     alert(result.error || 'Voting failed');
-        // }
+        }
     });
 });
